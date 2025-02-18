@@ -6,6 +6,7 @@ services:
     image: nginx:1.27.4
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /var/log/nginx:/var/log/nginx
     ports:
       - 8080:8080
     networks:
@@ -28,5 +29,70 @@ services:
     networks:
       - test
 
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    environment:
+      - HOSTNAME=telegraf
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+      - HOST_ETC=/host/etc
+    #user: "${TELEGRAF_UID}:${TELEGRAF_GID}" # Set UID/GID dynamically
+    entrypoint:
+      - sh
+      - -c
+      - |
+        chmod 666 /var/run/docker.sock && exec telegraf
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - influxdb
+    networks:
+      - test
+
+  influxdb:
+    image: influxdb:2.0
+    container_name: influxdb
+    privileged: true
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=telegraf
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+      - INFLUXDB_INIT_RETENTION=30d
+      - DOCKER_INFLUXDB_INIT_RETENTION=30d
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=adminpassword
+      - INFLUXDB_DB=metrics
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - test
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - test
+    volumes:
+      - grafana_data:/var/lib/grafana
+
 networks:
   test:
+    driver: bridge
+
+volumes:
+  influxdb_data:
+  grafana_data:
