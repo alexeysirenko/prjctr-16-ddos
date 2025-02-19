@@ -5,7 +5,7 @@ services:
     mem_limit: 64m
     image: nginx:1.27.4
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${NGINX_CONF_FILE:-./nginx/nginx-insecure.conf}:/etc/nginx/nginx.conf:ro
       - /var/log/nginx:/var/log/nginx
     ports:
       - 8080:8080
